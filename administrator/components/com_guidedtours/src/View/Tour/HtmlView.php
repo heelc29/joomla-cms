@@ -97,62 +97,62 @@ class HtmlView extends BaseHtmlView
         $user       = $this->getCurrentUser();
         $userId     = $user->id;
         $isNew      = empty($this->item->id);
+        $checkedOut = !(is_null($this->item->checked_out) || $this->item->checked_out == $userId);
+        $toolbar    = Toolbar::getInstance();
 
         $canDo = ContentHelper::getActions('com_guidedtours');
 
         ToolbarHelper::title(Text::_($isNew ? 'COM_GUIDEDTOURS_MANAGER_TOUR_NEW' : 'COM_GUIDEDTOURS_MANAGER_TOUR_EDIT'), 'map-signs');
 
-        $toolbarButtons = [];
+        // For new records, check the create permission.
+        if ($isNew && $canDo->get('core.create')) {
+            $toolbar->apply('tour.apply');
 
-        if ($isNew) {
-            // For new records, check the create permission.
-            if ($canDo->get('core.create')) {
-                ToolbarHelper::apply('tour.apply');
-                $toolbarButtons = [['save', 'tour.save'], ['save2new', 'tour.save2new']];
-            }
+            $saveGroup = $toolbar->dropdownButton('save-group');
 
-            ToolbarHelper::saveGroup(
-                $toolbarButtons,
-                'btn-success'
+            $saveGroup->configure(
+                function (Toolbar $childBar) {
+                    $childBar->save('tour.save');
+
+                    $childBar->save2new('tour.save2new');
+                }
             );
 
-            ToolbarHelper::cancel(
-                'tour.cancel'
-            );
+            $toolbar->cancel('tour.cancel', 'JTOOLBAR_CANCEL');
         } else {
             // Since it's an existing record, check the edit permission, or fall back to edit own if the owner.
             $itemEditable = $canDo->get('core.edit') || ($canDo->get('core.edit.own') && $this->item->created_by == $userId);
 
-            if ($itemEditable) {
-                ToolbarHelper::apply('tour.apply');
-                $toolbarButtons = [['save', 'tour.save']];
-
-                // We can save this record, but check the create permission to see if we can return to make a new one.
-                if ($canDo->get('core.create')) {
-                    $toolbarButtons[] = ['save2new', 'tour.save2new'];
-                    $toolbarButtons[] = ['save2copy', 'tour.save2copy'];
-                }
-
-                ToolbarHelper::saveGroup(
-                    $toolbarButtons,
-                    'btn-success'
-                );
-
-                ToolbarHelper::cancel(
-                    'tour.cancel',
-                    'JTOOLBAR_CLOSE'
-                );
+            if (!$checkedOut && $itemEditable) {
+                $toolbar->apply('tour.apply');
             }
+
+            $saveGroup = $toolbar->dropdownButton('save-group');
+
+            $saveGroup->configure(
+                function (Toolbar $childBar) use ($checkedOut, $itemEditable, $canDo) {
+                    // Can't save the record if it's checked out and editable
+                    if (!$checkedOut && $itemEditable) {
+                        $childBar->save('tour.save');
+
+                        // We can save this record, but check the create permission to see if we can return to make a new one.
+                        if ($canDo->get('core.create')) {
+                            $childBar->save2new('tour.save2new');
+                        }
+                    }
+
+                    // If checked out, we can still save
+                    if ($canDo->get('core.create')) {
+                        $childBar->save2copy('tour.save2copy');
+                    }
+                }
+            );
+
+            $toolbar->cancel('tour.cancel', 'JTOOLBAR_CLOSE');
         }
 
-        ToolbarHelper::divider();
-
-        $inlinehelp  = (string) $this->form->getXml()->config->inlinehelp['button'] === 'show';
-        $targetClass = (string) $this->form->getXml()->config->inlinehelp['targetclass'] ?: 'hide-aware-inline-help';
-
-        if ($inlinehelp) {
-            ToolbarHelper::inlinehelp($targetClass);
-        }
-        ToolbarHelper::help('Guided_Tours:_New_or_Edit_Tour');
+        $toolbar->divider();
+        $toolbar->inlinehelp();
+        $toolbar->help('Guided_Tours:_New_or_Edit_Tour');
     }
 }
