@@ -15,6 +15,7 @@ use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\GenericDataException;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
+use Joomla\CMS\Toolbar\Toolbar;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -96,61 +97,62 @@ class HtmlView extends BaseHtmlView
         $user       = $this->getCurrentUser();
         $userId     = $user->id;
         $isNew      = empty($this->item->id);
+        $checkedOut = !(is_null($this->item->checked_out) || $this->item->checked_out == $userId);
+        $toolbar    = Toolbar::getInstance();
 
         $canDo = ContentHelper::getActions('com_guidedtours');
 
         ToolbarHelper::title(Text::_($isNew ? 'COM_GUIDEDTOURS_MANAGER_STEP_NEW' : 'COM_GUIDEDTOURS_MANAGER_STEP_EDIT'), 'map-signs');
 
-        $toolbarButtons = [];
+        // For new records, check the create permission.
+        if ($isNew && $canDo->get('core.create')) {
+            $toolbar->apply('step.apply');
 
-        if ($isNew) {
-            // For new records, check the create permission.
-            if ($canDo->get('core.create')) {
-                ToolbarHelper::apply('step.apply');
-                $toolbarButtons = [['save', 'step.save'], ['save2new', 'step.save2new']];
-            }
+            $saveGroup = $toolbar->dropdownButton('save-group');
 
-            ToolbarHelper::saveGroup(
-                $toolbarButtons,
-                'btn-success'
+            $saveGroup->configure(
+                function (Toolbar $childBar) {
+                    $childBar->save('step.save');
+
+                    $childBar->save2new('step.save2new');
+                }
             );
 
-            ToolbarHelper::cancel(
-                'step.cancel'
-            );
+            $toolbar->cancel('step.cancel', 'JTOOLBAR_CANCEL');
         } else {
             // Since it's an existing record, check the edit permission, or fall back to edit own if the owner.
             $itemEditable = $canDo->get('core.edit') || ($canDo->get('core.edit.own') && $this->item->created_by == $userId);
 
-            if ($itemEditable) {
-                ToolbarHelper::apply('step.apply');
-                $toolbarButtons = [['save', 'step.save']];
-
-                // We can save this record, but check the create permission to see if we can return to make a new one.
-                if ($canDo->get('core.create')) {
-                    $toolbarButtons[] = ['save2new', 'step.save2new'];
-                    $toolbarButtons[] = ['save2copy', 'step.save2copy'];
-                }
-
-                ToolbarHelper::saveGroup(
-                    $toolbarButtons,
-                    'btn-success'
-                );
-
-                ToolbarHelper::cancel(
-                    'step.cancel',
-                    'JTOOLBAR_CLOSE'
-                );
+            if (!$checkedOut && $itemEditable) {
+                $toolbar->apply('step.apply');
             }
+
+            $saveGroup = $toolbar->dropdownButton('save-group');
+
+            $saveGroup->configure(
+                function (Toolbar $childBar) use ($checkedOut, $itemEditable, $canDo) {
+                    // Can't save the record if it's checked out and editable
+                    if (!$checkedOut && $itemEditable) {
+                        $childBar->save('step.save');
+
+                        // We can save this record, but check the create permission to see if we can return to make a new one.
+                        if ($canDo->get('core.create')) {
+                            $childBar->save2new('step.save2new');
+                        }
+                    }
+
+                    // If checked out, we can still save
+                    if ($canDo->get('core.create')) {
+                        $childBar->save2copy('step.save2copy');
+                    }
+                }
+            );
+
+            $toolbar->cancel('step.cancel', 'JTOOLBAR_CLOSE');
         }
 
-        ToolbarHelper::divider();
-        $inlinehelp  = (string) $this->form->getXml()->config->inlinehelp['button'] === 'show';
-        $targetClass = (string) $this->form->getXml()->config->inlinehelp['targetclass'] ?: 'hide-aware-inline-help';
-
-        if ($inlinehelp) {
-            ToolbarHelper::inlinehelp($targetClass);
-        }
-        ToolbarHelper::help('Guided_Tours:_New_or_Edit_Step');
+        $toolbar->divider();
+        $toolbar->inlinehelp();
+        $toolbar->help('Guided_Tours:_New_or_Edit_Step');
     }
 }
