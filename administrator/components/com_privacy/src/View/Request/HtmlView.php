@@ -178,7 +178,7 @@ class HtmlView extends BaseHtmlView
                     break;
             }
 
-            $toolbar->cancel('request.cancel');
+            $toolbar->cancel('request.cancel', 'JTOOLBAR_CANCEL');
             $toolbar->help('Privacy:_Review_Information_Request');
         }
     }

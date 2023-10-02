@@ -115,7 +115,7 @@ class HtmlView extends BaseHtmlView implements UserFactoryAwareInterface
                     ->listCheck(false);
             }
 
-            $toolbar->cancel('message.cancel');
+            $toolbar->cancel('message.cancel', 'JTOOLBAR_CANCEL');
             $toolbar->help('Private_Messages:_Read');
         }
     }
