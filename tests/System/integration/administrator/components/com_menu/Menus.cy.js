@@ -3,6 +3,7 @@ describe('Test in backend that the menu list', () => {
     cy.doAdministratorLogin();
     cy.visit('/administrator/index.php?option=com_menus&view=menus&filter=');
   });
+  afterEach(() => cy.task('queryDB', "DELETE FROM #__modules WHERE module = 'mod_menu' AND title LIKE 'Test % Menu Module'"));
 
   it('has a title', () => cy.get('h1.page-title').should('contain.text', 'Menus'));
 
@@ -14,61 +15,62 @@ describe('Test in backend that the menu list', () => {
     cy.contains('Menus: Add');
   });
 
-  it('can create a module to display the created site menu', () => {
+  it('can create a module to display the site menu', () => {
     cy.get('#client_id').select('Site');
+    cy.db_createMenuType({ title: 'Test Site Menu', client_id: 0 });
+    cy.reload();
 
     cy.get('table#menuList')
       .contains('Test Site Menu')
       .parents('tr')
-      .find('button.btn.btn-sm.btn-primary') // Locate the button
-      .should('contain.text', 'Add a module for this menu') // Validate the button text
-      .click(); // Perform the click action
+      .find('button.btn.btn-sm.btn-primary')
+      .should('contain.text', 'Add a module for this menu')
+      .click();
 
-    cy.get('body').then(($body) => {
-      cy.get('header').should('contain.text', 'Add a module for this menu');
-
-      cy.get('iframe').iframe().then(($body) => {
-        cy.wrap($body).find('input[name="jform[title]"]').type('Test Site Menu Module');
-        cy.wrap($body).find('input[name="jform[position]"]').select('sidebar-right');
+    cy.get('joomla-dialog[type="iframe"]').as('dialogContent');
+    cy.get('@dialogContent').should('be.visible');
+    cy.get('@dialogContent').within(() => {
+      cy.get('header.joomla-dialog-header').should('contain', 'Add a module for this menu');
+      cy.get('section.joomla-dialog-body iframe').iframe().within(() => {
+        cy.get('#jform_title').clear().type('Test Site Menu Module');
+        cy.selectOptionInFancySelect('#jform_position', 'sidebar-right');
+        cy.get('#toolbar-save').click();
       });
-
-      cy.clickToolbarButton('Save & Close');
     });
+    cy.get('@dialogContent').should('not.exist');
 
-    //there is no success message for this action so we check the menu item to see if it has a linked module
-    cy.get('table#menuList')
-      .contains('Test Site Menu')
-      .parents('tr')
-      .find('button.btn.btn-secondary.btn-sm.dropdown-toggle')
-      .should('contain.text', 'Modules');
+    cy.get('table#menuList').contains('Test Site Menu').parents('tr').as('listRow');
+    cy.get('@listRow').find('button.btn.btn-sm.btn-secondary.dropdown-toggle').should('contain.text', 'Modules').click()
+    cy.get('@listRow').contains('Test Site Menu Module').should('be.visible');
   });
 
-  it('can create a module to display the created administrator menu', () => {
+  it('can create a module to display the administrator menu', () => {
     cy.get('#client_id').select('Administrator');
+    cy.db_createMenuType({ title: 'Test Admin Menu', client_id: 1 });
+    cy.reload();
 
     cy.get('table#menuList')
       .contains('Test Admin Menu')
       .parents('tr')
-      .find('button.btn.btn-sm.btn-primary') // Locate the button
-      .should('contain.text', 'Add a module for this menu') // Validate the button text
-      .click(); // Perform the click action
+      .find('button.btn.btn-sm.btn-primary')
+      .should('contain.text', 'Add a module for this menu')
+      .click();
 
-    cy.get('body').then(($body) => {
-      cy.get('header').should('contain.text', 'Add a module for this menu');
-
-      cy.get('iframe').iframe().then(($body) => {
-        cy.wrap($body).find('input[name="jform[title]"]').type('Test Admin Menu Module');
-        cy.wrap($body).find('input[name="jform[position]"]').select('menu');
+    cy.get('joomla-dialog[type="iframe"]').as('dialogContent');
+    cy.get('@dialogContent').should('be.visible');
+    cy.get('@dialogContent').within(() => {
+      cy.get('header.joomla-dialog-header').should('contain', 'Add a module for this menu');
+      cy.get('section.joomla-dialog-body iframe').iframe().within(() => {
+        cy.get('#jform_title').clear().type('Test Admin Menu Module');
+        cy.selectOptionInFancySelect('#jform_position', 'menu');
+        cy.get('#toolbar-save').click();
       });
-      cy.clickToolbarButton('Save & Close');
     });
+    cy.get('@dialogContent').should('not.exist');
 
-    //there is no success message for this action so we check the menu item to see if it has a linked module
-    cy.get('table#menuList')
-      .contains('Test Admin Menu')
-      .parents('tr')
-      .find('button.btn.btn-secondary.btn-sm.dropdown-toggle')
-      .should('contain.text', 'Modules');
+    cy.get('table#menuList').contains('Test Admin Menu').parents('tr').as('listRow');
+    cy.get('@listRow').find('button.btn.btn-sm.btn-secondary.dropdown-toggle').should('contain.text', 'Modules').click()
+    cy.get('@listRow').contains('Test Admin Menu Module').should('be.visible');
   });
 
   it('can delete the created site menu', () => {
