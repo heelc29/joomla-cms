@@ -13,6 +13,7 @@ describe('Test in backend that the menu list', () => {
 
     cy.contains('Menus: Add');
   });
+
   it('can create a new site menu', () => {
     cy.clickToolbarButton('New');
 
@@ -22,6 +23,7 @@ describe('Test in backend that the menu list', () => {
     cy.clickToolbarButton('Save & Close');
     cy.get('.alert-message').should('contain.text', 'Menu saved');
   });
+
   it('can create a new administrator menu', () => {
     cy.get('#client_id').select('Administrator');
 
@@ -35,6 +37,7 @@ describe('Test in backend that the menu list', () => {
 
     cy.get('.alert-message').should('contain.text', 'Menu saved');
   });
+
   it('can display the created administrator menu', () => {
     cy.get('#client_id').select('Administrator');
 
@@ -42,6 +45,7 @@ describe('Test in backend that the menu list', () => {
       .contains('Test Admin Menu')
       .should('be.visible');
   });
+
   it('can create a module to display the created site menu', () => {
     cy.get('#client_id').select('Site');
 
@@ -52,24 +56,25 @@ describe('Test in backend that the menu list', () => {
       .should('contain.text', 'Add a module for this menu') // Validate the button text
       .click(); // Perform the click action
 
-       cy.get('body').then(($body) => {
-         cy.get('header').should('contain.text', 'Add a module for this menu');
+    cy.get('body').then(($body) => {
+      cy.get('header').should('contain.text', 'Add a module for this menu');
 
-         cy.get('iframe').iframe().then(($body) => {
-          cy.wrap($body).find('input[name="jform[title]"]').type('Test Site Menu Module');
-          cy.wrap($body).find('input[name="jform[position]"]').select('sidebar-right');
-         });
+      cy.get('iframe').iframe().then(($body) => {
+        cy.wrap($body).find('input[name="jform[title]"]').type('Test Site Menu Module');
+        cy.wrap($body).find('input[name="jform[position]"]').select('sidebar-right');
+      });
 
-         cy.clickToolbarButton('Save & Close');
-       });
+      cy.clickToolbarButton('Save & Close');
+    });
 
-      //there is no success message for this action so we check the menu item to see if it has a linked module
-      cy.get('table#menuList')
-        .contains('Test Site Menu')
-        .parents('tr')
-        .find('button.btn.btn-secondary.btn-sm.dropdown-toggle')
-        .should('contain.text', 'Modules');
+    //there is no success message for this action so we check the menu item to see if it has a linked module
+    cy.get('table#menuList')
+      .contains('Test Site Menu')
+      .parents('tr')
+      .find('button.btn.btn-secondary.btn-sm.dropdown-toggle')
+      .should('contain.text', 'Modules');
   });
+
   it('can create a module to display the created administrator menu', () => {
     cy.get('#client_id').select('Administrator');
 
@@ -80,22 +85,22 @@ describe('Test in backend that the menu list', () => {
       .should('contain.text', 'Add a module for this menu') // Validate the button text
       .click(); // Perform the click action
 
-       cy.get('body').then(($body) => {
-         cy.get('header').should('contain.text', 'Add a module for this menu');
+    cy.get('body').then(($body) => {
+      cy.get('header').should('contain.text', 'Add a module for this menu');
 
-         cy.get('iframe').iframe().then(($body) => {
-          cy.wrap($body).find('input[name="jform[title]"]').type('Test Admin Menu Module');
-          cy.wrap($body).find('input[name="jform[position]"]').select('menu');
-         });
-         cy.clickToolbarButton('Save & Close');
-       });
+      cy.get('iframe').iframe().then(($body) => {
+        cy.wrap($body).find('input[name="jform[title]"]').type('Test Admin Menu Module');
+        cy.wrap($body).find('input[name="jform[position]"]').select('menu');
+      });
+      cy.clickToolbarButton('Save & Close');
+    });
 
-      //there is no success message for this action so we check the menu item to see if it has a linked module
-      cy.get('table#menuList')
-        .contains('Test Admin Menu')
-        .parents('tr')
-        .find('button.btn.btn-secondary.btn-sm.dropdown-toggle')
-        .should('contain.text', 'Modules');
+    //there is no success message for this action so we check the menu item to see if it has a linked module
+    cy.get('table#menuList')
+      .contains('Test Admin Menu')
+      .parents('tr')
+      .find('button.btn.btn-secondary.btn-sm.dropdown-toggle')
+      .should('contain.text', 'Modules');
   });
 
   it('can delete the created site menu', () => {
@@ -116,6 +121,7 @@ describe('Test in backend that the menu list', () => {
 
     cy.get('.alert-message').should('contain.text', 'Menu deleted');
   });
+
   it('can delete the created administrator menu', () => {
     cy.get('#client_id').select('Administrator');
 
