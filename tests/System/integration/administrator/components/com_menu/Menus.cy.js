@@ -73,42 +73,27 @@ describe('Test in backend that the menu list', () => {
     cy.get('@listRow').contains('Test Admin Menu Module').should('be.visible');
   });
 
-  it('can delete the created site menu', () => {
+  it('can delete the site menu', () => {
     cy.get('#client_id').select('Site');
+    cy.db_createMenuType({ title: 'Test Site Menu', client_id: 0 });
 
-    cy.get('table#menuList')
-      .contains('Test Site Menu')
-      .parents('tr')
-      .find('input[type="checkbox"]')
-      .check();
-    cy.clickToolbarButton('Delete');
+    cy.searchForItem('Test Site Menu');
+    cy.checkAllResults();
+    cy.clickToolbarButton('Empty Trash');
+    cy.clickDialogConfirm(true);
 
-    cy.get('body').then(($body) => {
-      if ($body.find('div.buttons-holder button[data-button-ok]').length > 0) {
-        cy.get('div.buttons-holder button[data-button-ok]').click();
-      }
-    });
-
-    cy.get('.alert-message').should('contain.text', 'Menu deleted');
+    cy.checkForSystemMessage('Menu deleted.');
   });
 
-  it('can delete the created administrator menu', () => {
+  it('can delete the administrator menu', () => {
     cy.get('#client_id').select('Administrator');
+    cy.db_createMenuType({ title: 'Test Admin Menu', client_id: 1 });
 
-    cy.get('table#menuList')
-      .contains('Test Admin Menu')
-      .parents('tr')
-      .find('input[type="checkbox"]')
-      .check();
+    cy.searchForItem('Test Admin Menu');
+    cy.checkAllResults();
+    cy.clickToolbarButton('Empty Trash');
+    cy.clickDialogConfirm(true);
 
-    cy.clickToolbarButton('Delete');
-
-    cy.get('body').then(($body) => {
-      if ($body.find('div.buttons-holder button[data-button-ok]').length > 0) {
-        cy.get('div.buttons-holder button[data-button-ok]').click();
-      }
-    });
-
-    cy.get('.alert-message').should('contain.text', 'Menu deleted');
+    cy.checkForSystemMessage('Menu deleted.');
   });
 });
