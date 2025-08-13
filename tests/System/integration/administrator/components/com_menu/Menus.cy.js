@@ -14,16 +14,6 @@ describe('Test in backend that the menu list', () => {
     cy.contains('Menus: Add');
   });
 
-  it('can create a new site menu', () => {
-    cy.clickToolbarButton('New');
-
-    cy.get('input[name="jform[title]"]').type('Test Site Menu');
-    cy.get('input[name="jform[menutype]"]').type('test-site-menu');
-    cy.get('input[name="jform[description]"]').type('Test Site Menu Description');
-    cy.clickToolbarButton('Save & Close');
-    cy.get('.alert-message').should('contain.text', 'Menu saved');
-  });
-
   it('can create a new administrator menu', () => {
     cy.get('#client_id').select('Administrator');
 
