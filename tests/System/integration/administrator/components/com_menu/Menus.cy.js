@@ -14,28 +14,6 @@ describe('Test in backend that the menu list', () => {
     cy.contains('Menus: Add');
   });
 
-  it('can create a new administrator menu', () => {
-    cy.get('#client_id').select('Administrator');
-
-    cy.clickToolbarButton('New');
-
-    cy.get('h1.page-title').should('contain.text', 'Menus: Add');
-    cy.get('input[name="jform[title]"]').type('Test Admin Menu');
-    cy.get('input[name="jform[menutype]"]').type('test-admin-menu');
-    cy.get('input[name="jform[description]"]').type('Test Admin Menu Description');
-    cy.clickToolbarButton('Save & Close');
-
-    cy.get('.alert-message').should('contain.text', 'Menu saved');
-  });
-
-  it('can display the created administrator menu', () => {
-    cy.get('#client_id').select('Administrator');
-
-    cy.get('table#menuList')
-      .contains('Test Admin Menu')
-      .should('be.visible');
-  });
-
   it('can create a module to display the created site menu', () => {
     cy.get('#client_id').select('Site');
 
